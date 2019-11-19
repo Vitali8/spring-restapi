@@ -1,0 +1,24 @@
+version: "3.7"
+
+services:
+  mariadb:
+    image: mariadb
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_DATABASE=example-db # library-db
+      - MYSQL_ROOT_PASSWORD=root
+    volumes:
+      - ./docker/mariadb/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - 3001:80
+    environment:
+      - PMA_HOST=mariadb
+      - PMA_PORT=3306
+    logging:
+      driver: none
+    depends_on:
+      - mariadb
