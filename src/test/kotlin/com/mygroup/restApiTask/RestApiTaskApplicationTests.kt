@@ -28,6 +28,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup
 import org.springframework.web.context.WebApplicationContext
+import java.text.FieldPosition
 import java.time.LocalDateTime
 
 @SpringBootTest
@@ -39,7 +40,8 @@ class RestApiTaskApplicationTests {
     private val jsonContentType = MediaType(MediaType.APPLICATION_JSON.type, MediaType.APPLICATION_JSON.subtype) // Записываем http заголовок в переменную для удобства
     private lateinit var mockMvc: MockMvc // Объявляем изменяемую переменную с отложенной инициализацией в которой будем хранить mock объект
 
-    private val firstTaskCreationDate = LocalDateTime.now()!!
+    // Data for tests
+    private val taskCreationDate = LocalDateTime.now().withNano(0)!!
 
     @Autowired
     private lateinit var webAppContext: WebApplicationContext // Объявляем изменяемую переменную с отложенной инициализацией в которую будет внедрен контекст приложения
@@ -72,9 +74,9 @@ class RestApiTaskApplicationTests {
         val resultJsonString = """
             {
                 "name": "Doing",
-                "tasks": [],
                 "position": 1.0,
-                "id": 1
+                "id": 1,
+                "tasks": []
             }
         """.trimIndent()
 
@@ -88,118 +90,131 @@ class RestApiTaskApplicationTests {
         val passedJsonString = """
             {
                 "name": "First task",
-                "creation_date": "$firstTaskCreationDate",
-                "task_list_id": 1
+                "creationDate": "$taskCreationDate",
+                "taskListId": 1
             }
         """.trimIndent()
 
-        val request = post(tasksUrl).contentType(jsonContentType).content(passedJsonString)
+        val request = post(taskListUrl + "1/tasks").contentType(jsonContentType).content(passedJsonString)
 
         val resultJsonString = """
             {
                 "name": "First task",
-                "creation_date": "$firstTaskCreationDate",
                 "description": "",
-                "task_list_id": 1,
+                "position": 1.0,
+                "creationDate": "$taskCreationDate",
+                "taskListId": 1,
                 "id": 1
             }
         """.trimIndent()
 
         val result = mockMvc.perform(request)
         result.andExpect(status().isCreated)
-                .andExpect(content().json(resultJsonString, false))
+                .andExpect(content().json(resultJsonString, true))
     }
 
     @Test
     fun `4 - Update first task`() {
-        val passedJsonString = """
-            {
-                "description": "Look at iPhone 4S - smart phone by Apple"
-            }
-        """.trimIndent()
-
-        val request = put(tasksUrl + "1").contentType(jsonContentType).content(passedJsonString)
-
         val resultJsonString = """
             {
                 "name": "First task",
-                "creation_date": "$firstTaskCreationDate",
+                "creationDate": "$taskCreationDate",
                 "description": "Look at iPhone 4S - smart phone by Apple",
-                "task_list_id": 1,
+                "taskListId": 1,
+                "position": 1.0,
                 "id": 1
             }
         """.trimIndent()
+        val request = put(taskListUrl + "1/tasks/1").contentType(jsonContentType).content(resultJsonString)
 
         val result = mockMvc.perform(request)
         result.andExpect(status().isOk)
-                .andExpect(content().json(resultJsonString, false))
+                .andExpect(content().json(resultJsonString, true))
     }
 
     @Test
     fun `5 - Get first task`() {
-        val request = get(tasksUrl + "1").contentType(jsonContentType)
+        val request = get(taskListUrl + "1/tasks/1").contentType(jsonContentType)
 
         val resultJsonString = """
             {
                 "name": "First task",
-                "creation_date": "$firstTaskCreationDate",
+                "creationDate": "$taskCreationDate",
                 "description": "Look at iPhone 4S - smart phone by Apple",
-                "task_list_id": 1,
+                "position": 1.0,
+                "taskListId": 1,
                 "id": 1
             }
         """.trimIndent()
 
         mockMvc.perform(request)
                 .andExpect(status().isFound)
-                .andExpect(content().json(resultJsonString, false))
+                .andExpect(content().json(resultJsonString, true))
     }
 
     @Test
     fun `6 - Get first column, with one task`() {
-        val request = get(taskListUrl).contentType(jsonContentType)
+        val request = get(taskListUrl + 1).contentType(jsonContentType)
 
         val resultJsonString = """
-            [
-                {
-                    "name": "Doing",
-                    "tasks": [1],
-                    "id": 1
-                }
-            ]
-        """.trimIndent()
-
-        mockMvc.perform(request)
-                .andExpect(status().isOk)
-                .andExpect(content().json(resultJsonString, false))
-    }
-
-    @Test
-    fun `7 - Get all tasks`() {
-        val request = get(tasksUrl).contentType(jsonContentType)
-
-        val resultJsonString = """
-            [
-                {
+            {
+                "name": "Doing",
+                "position":1.0,
+                "tasks": [{
                     "name": "First task",
-                    "creation_date": "$firstTaskCreationDate",
+                    "creationDate": "$taskCreationDate",
                     "description": "Look at iPhone 4S - smart phone by Apple",
-                    "task_list_id": 1,
+                    "position": 1.0,
+                    "taskListId": 1,
                     "id": 1
-                }
-            ]
+                }],
+                "id": 1
+            }
         """.trimIndent()
 
         mockMvc.perform(request)
-                .andExpect(status().isOk)
-                .andExpect(content().json(resultJsonString, false))
+                .andExpect(status().isFound)
+                .andExpect(content().json(resultJsonString, true))
     }
 
     @Test
-    fun `8 - Add two new columns`() {
+    fun `7 - Add new tasks`() {
+        fun newTask(id: Int, name: String) {
+            val passedJsonString = """
+            {
+                "name": "$name",
+                "creationDate": "$taskCreationDate",
+                "position": $id.0,
+                "taskListId": 1
+            }
+        """.trimIndent()
+            val request = post(taskListUrl + "1/tasks").contentType(jsonContentType).content(passedJsonString)
+            val resultJsonString = """
+                {
+                    "name": "$name",
+                    "creationDate": "$taskCreationDate",
+                    "description": "",
+                    "position": $id.0,
+                    "taskListId": 1,
+                    "id": $id
+                }
+            """.trimIndent()
+
+            mockMvc.perform(request)
+                    .andExpect(status().isCreated)
+                    .andExpect(content().json(resultJsonString, true))
+        }
+        newTask(2, "Second Task")
+        newTask(3, "Third Task")
+    }
+
+    @Test
+    fun `8 - Add new columns`() {
         fun newColumn(columnId: Long, columnName: String) {
             val passedJsonString = """
             {
-                "name": "$columnName"
+                "name": "$columnName",
+                "position": $columnId.0
             }
         """.trimIndent()
 
@@ -208,6 +223,7 @@ class RestApiTaskApplicationTests {
             val resultJsonString = """
             {
                 "name": "$columnName",
+                "position": $columnId.0,
                 "tasks": [],
                 "id": $columnId
             }
@@ -215,23 +231,30 @@ class RestApiTaskApplicationTests {
 
             val result = mockMvc.perform(request)
             result.andExpect(status().isCreated)
-                    .andExpect(content().json(resultJsonString, false))
+                    .andExpect(content().json(resultJsonString, true))
         }
         newColumn(2, "Done")
         newColumn(3, "ToDo")
+        newColumn(4, "ForDelete")
     }
 
     @Test
     fun `9 - Move columns`() {
-        val request = put(taskListUrl + "3/move?columnIdA=1&columnIdB=2")
+        val passedJsonString = """
+            {
+                "columnIdA": 2,
+                "columnIdB": 3
+            }
+        """.trimIndent()
+        val request = put(taskListUrl + "1/move").contentType(jsonContentType).content(passedJsonString)
 
         val result = mockMvc.perform(request)
         result.andExpect(status().isOk)
     }
 
     @Test
-    fun `10 - Delete first list of task`() {
-        val request = delete(taskListUrl + "1").contentType(jsonContentType)
+    fun `9A - Delete last column`() {
+        val request = delete(taskListUrl + "4").contentType(jsonContentType)
 
         mockMvc.perform(request).andExpect(status().isOk)
     }
