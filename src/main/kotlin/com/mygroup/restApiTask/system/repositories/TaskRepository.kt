@@ -15,5 +15,9 @@ interface TaskRepository : CrudRepository<Task, Long> {
 //
 //    @Query(value = "SELECT id, name, description, creation_date, task_list_id FROM tasks WHERE id = :id", nativeQuery = true)
 //    override fun findById(@Param("id") id: Long): Optional<Task>
+    @Query("select * from tasks where task_list_id = :taskListId", nativeQuery = true)
+    fun findAllByColumn(@Param("taskListId") taskListId: Long): MutableList<Task>
 
+    @Query("select * from tasks where id = :id and task_list_id = :taskListId limit 1", nativeQuery = true)
+    fun findByIdAndColumn(@Param("id") id: Long, @Param("taskListId") taskListId: Long): Task
 }

@@ -23,4 +23,6 @@ class TaskService(private val taskRepository: TaskRepository) { // Внедря�
         val upperElement = get(upperElementId).get()
         targetElement.position = (upperElement.position + lowerElement.position) / 2
     }
+
+    fun findAllByColumn(columnId: Long) = taskRepository.findAllByColumn(columnId)
 }
