@@ -1,40 +1,32 @@
 package com.mygroup.restApiTask.system.models
 
 import java.time.LocalDateTime
+import java.util.*
 import javax.persistence.*
 
-@Entity // Указывает на то что этот класс описывает модель данных
-@Table(name = "tasks") // Говорим как назвать таблицу в БД
+@Entity
+@Table(name = "Tasks")
 @SequenceGenerator(name = "task_pos_seq", initialValue = 1, allocationSize = 1)
-data class Task( // Дата класс нам сгенерирует методы equals и hashCode и даст метод copy
-//        @JsonProperty("name") // Говорим как будет называться свойство в JSON объекте
-        @Column(name = "name", length = 200) // Говорим как будет называться поле в БД и задаем его длину
-        var name: String = "", // Объявляем неизменяемое свойство (геттер, а также поле для него будут сгенерированы автоматически) name, с пустой строкой в качестве значения по умолчанию
+data class Task(
+        @Column(name = "name", length = 200)
+        var name: String = "",
 
-//        @JsonProperty("description")
         @Column(name = "description", length = 1000)
         var description: String = "",
 
 //        @JsonProperty("position")
-        @Column(
-                name = "position", unique = true, nullable = false/*,
-                columnDefinition = "DOUBLE DEFAULT nextval('task_pos_seq')"*/
-        )
+        @Column(name = "position", unique = true, nullable = false)
         var position: Double = 1.0,
 
-//        @JsonProperty("creationDate")
-        @Column(name = "creationDate")
-        var creationDate: LocalDateTime = LocalDateTime.now(),
+        @Column(name = "creation")
+        var creation: LocalDateTime = LocalDateTime.now(),
 
-        @Column(name = "task_list_id", nullable = false)
-        var taskListId: Long = 0L,
-
-        @Id // Сообщяем ORM что это поле - Primary Key
-//        @JsonProperty("id")
+        @Id
         @Column(name = "id", updatable = false, nullable = false)
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         val id: Long = 0L
 ) {
+//    @JoinColumn(name = "column_id", referencedColumnName = "id", nullable = false)
 //    @ManyToOne
 //    lateinit var taskList: TaskList
 
@@ -42,5 +34,16 @@ data class Task( // Дата класс нам сгенерирует метод
 //        this.taskList = taskList
 //    }
 
-    operator fun compareTo(o: Task) = position.compareTo(o.position)
+//    operator fun compareTo(o: Task) = position.compareTo(o.position)
+    override fun equals(o: Any?): Boolean {
+        if (this === o) return true
+        if (o == null || javaClass != o.javaClass) return false
+        val that = o as Task
+        return id == that.id && java.lang.Double.compare(that.position, position) == 0 &&
+                name == that.name &&
+                description == that.description &&
+                creation == that.creation
+    }
+
+    override fun hashCode(): Int = Objects.hash(id, name, description, creation, position)
 }

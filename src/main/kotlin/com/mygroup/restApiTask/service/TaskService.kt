@@ -13,16 +13,22 @@ class TaskService(private val taskRepository: TaskRepository) { // Внедря�
 
     fun add(task: Task): Task = taskRepository.save(task)
 
-    fun edit(id: Long, task: Task): Task = taskRepository.save(task.copy(id = id)) // Сохраняем копию объекта с указанным id в БД. Идиоматика Kotlin говорит что НЕ изменяемый - всегда лучше чем изменяемый (никто не поправит значение в другом потоке) и предлагает метод copy для копирования объектов (специальных классов для хранения данных) с возможностью замены значений
+    fun edit(id: Long, task: Task): Task = taskRepository.save(task.copy(id = id))
+    // Сохраняем копию объекта с указанным id в БД.
+    // Идиоматика Kotlin говорит что НЕ изменяемый - всегда лучше чем изменяемый
+    // (никто не поправит значение в другом потоке)
+    // и предлагает метод copy для копирования объектов (специальных классов для хранения данных) с возможностью замены значений
 
     fun remove(id: Long) = taskRepository.deleteById(id)
 
-    fun insertBetween(targetId: Long, upperElementId: Long, lowerElementId: Long) {
+    fun insertBelow(targetId: Long, upperElementId: Long) {
         val targetElement = get(targetId).get()
-        val lowerElement = get(lowerElementId).get()
+        val lowerElement = findNextAfter(upperElementId).get()
         val upperElement = get(upperElementId).get()
         targetElement.position = (upperElement.position + lowerElement.position) / 2
+        edit(targetId, targetElement)
     }
 
-    fun findAllByColumn(columnId: Long) = taskRepository.findAllByColumn(columnId)
+    fun findNextAfter(id: Long) = taskRepository.findFirstByPositionGreaterThanOrderByPositionAsc(get(id).get().position)
+//    fun findAllByColumn(columnId: Long) = taskRepository.findAllByColumn(columnId)
 }

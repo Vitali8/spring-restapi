@@ -13,14 +13,17 @@ class TaskListService(private val taskListRepository: TaskListRepository) { // �
 
     fun add(taskList: TaskList): TaskList = taskListRepository.save(taskList)
 
-    fun edit(id: Long, taskList: TaskList): TaskList = taskListRepository.save(taskList.copy(id = id)) // Сохраняем копию объекта с указанным id в БД. Идиоматика Kotlin говорит что НЕ изменяемый - всегда лучше чем изменяемый (никто не поправит значение в другом потоке) и предлагает метод copy для копирования объектов (специальных классов для хранения данных) с возможностью замены значений
+    fun edit(id: Long, taskList: TaskList): TaskList = taskListRepository.save(taskList.copy(id = id))
 
     fun remove(id: Long) = taskListRepository.deleteById(id)
 
-    fun insertBetween(targetId: Long, upperElementId: Long, lowerElementId: Long) {
+    fun insertBelow(targetId: Long, upperElementId: Long) {
         val targetElement = get(targetId).get()
-        val lowerElement = get(lowerElementId).get()
+        val lowerElement = findNextAfter(upperElementId).get()
         val upperElement = get(upperElementId).get()
         targetElement.position = (upperElement.position + lowerElement.position) / 2
+        edit(targetId, targetElement)
     }
+
+    fun findNextAfter(id: Long) = taskListRepository.findFirstByPositionGreaterThanOrderByPositionAsc(get(id).get().position)
 }

@@ -1,31 +1,55 @@
-//package com.mygroup.restApiTask.system.controllers
-//
-//import com.mygroup.restApiTask.service.*
-//import com.mygroup.restApiTask.system.models.Task
-//import org.springframework.http.HttpStatus
-//import org.springframework.web.bind.annotation.*
-//
-//@RestController // Сообщаем как обрабатывать http запросы и в каком виде отправлять ответы (сериализация в JSON и обратно)
-//@RequestMapping("tasks") // Указываем префикс маршрута для всех экшенов
-//class TasksController(private val taskService: TaskService) { // Внедряем наш сервис в качестве зависимости
-//    @GetMapping // Говорим что экшен принимает GET запрос без параметров в url
-//    fun index() = taskService.all() // И возвращает результат метода all нашего сервиса. Функциональная запись с выводом типа
-//
-//    @PostMapping("/") // Экшен принимает POST запрос без параметров в url
-//    @ResponseStatus(HttpStatus.CREATED) // Указываем специфический HttpStatus при успешном ответе
-//    fun create(@RequestBody task: Task) = taskService.add(task) // Принимаем объект Task из тела запроса и передаем его в метод add нашего сервиса
-//
-//    @GetMapping("{id}") // Тут мы говорим что это GET запрос с параметром в url (http://localhost/tasks/{id})
-//    @ResponseStatus(HttpStatus.FOUND)
-//    fun read(@PathVariable id: Long) = taskService.get(id) // Сообщаем что наш id типа Long и передаем его в метод get сервиса
-//
-//    /* Здесь мы принимаем один параметр из url, второй из тела PUT запроса и отдаем их методу edit */
-//    @PutMapping("{id}")
-//    fun update(@PathVariable id: Long, @RequestBody task: Task) = taskService.edit(id, task)
-//
-//    @PutMapping("{id}/move")
-//    fun move(@PathVariable id: Long, @RequestBody taskIdA: Long, @RequestBody taskIdB: Long) = taskService.insertBetween(id, taskIdA, taskIdB)
-//
-//    @DeleteMapping("{id}")
-//    fun delete(@PathVariable id: Long) = taskService.remove(id)
-//}
+package com.mygroup.restApiTask.system.controllers
+
+import com.mygroup.restApiTask.service.TaskListService
+import com.mygroup.restApiTask.service.TaskService
+import com.mygroup.restApiTask.system.models.Task
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
+import org.springframework.web.bind.annotation.*
+
+@RestController
+//@RequestMapping("tasks")
+class TasksController(private val taskService: TaskService) {
+    @Autowired
+    private lateinit var taskListService: TaskListService
+
+    @GetMapping("/tasks")
+    fun index() = taskService.all()
+
+    @GetMapping("/taskLists/{taskListId}/tasks/")
+    fun getTasks(@PathVariable(value = "taskListId") taskListId: Long): MutableList<Task> = taskListService.get(taskListId).get().tasks
+
+    @PostMapping("/taskLists/{id}/tasks")
+    @ResponseStatus(HttpStatus.CREATED)
+    fun addTask(@PathVariable(value = "id") id: Long, @RequestBody task: Task): Task {
+        val column = taskListService.get(id).get()
+        column.tasks.add(task)
+        return taskService.add(task)
+    }
+
+    @GetMapping("/tasks/{id}")
+    @ResponseStatus(HttpStatus.FOUND)
+    fun read(@PathVariable id: Long) = taskService.get(id)
+
+    @GetMapping("/taskLists/{taskListId}/tasks/{taskId}")
+    @ResponseStatus(HttpStatus.FOUND)
+    fun getTask(@PathVariable(value = "taskListId") taskListId: Long, @PathVariable(value = "taskId") taskId: Long) = taskService.get(taskId)
+
+    @PutMapping("/tasks/{id}")
+    fun update(@PathVariable id: Long, @RequestBody task: Task) = taskService.edit(id, task)
+
+    @PutMapping("/taskLists/{taskListId}/tasks/{taskId}")
+    fun updateTask(@PathVariable(value = "taskListId") taskListId: Long,
+                   @PathVariable(value = "taskId") taskId: Long,
+                   @RequestBody updatedTask: Task) = taskService.edit(taskId, updatedTask)
+
+    @PutMapping("/tasks/{targetTaskId}/move/{upperTaskId}")
+    fun move(@PathVariable targetTaskId: Long, @PathVariable upperTaskId: Long) = taskService.insertBelow(targetTaskId, upperTaskId)
+
+    @DeleteMapping("/tasks/{id}")
+    fun delete(@PathVariable id: Long) = taskService.remove(id)
+
+    @DeleteMapping("/taskLists/{taskListId}/tasks/{taskId}")
+    fun deleteTask(@PathVariable(value = "taskListId") taskListId: Long,
+                   @PathVariable(value = "taskId") taskId: Long) = taskService.remove(taskId)
+}
