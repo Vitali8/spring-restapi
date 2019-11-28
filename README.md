@@ -32,7 +32,7 @@ mvn spring-boot:run
 
 The app will start running at <http://localhost:8080>.
 
-## Explore Rest APIs [WIP]
+## Explore Rest APIs
 
 The app defines following APIs.
 
@@ -58,7 +58,7 @@ For tasks:
     POST /columns/{id}/tasks
     GET /columns/{columnId}/tasks/{taskId}
     PUT /columns/{columnId}/tasks/{taskId}
-    PUT /columns/{columnFrom}/tasks/{taskId}/moveToColumn/{columnTo}
+    PUT /columns/{fromColumnId}/tasks/{taskId}/moveToColumn/{toColumnId}
     DELETE /columns/{columnId}/tasks/{taskId}
 
 
