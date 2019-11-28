@@ -384,4 +384,27 @@ class RestApiTaskApplicationTests {
         mockMvc.perform(request).andExpect(status().isOk)
     }
 
+    @Test
+    fun `S - Delete task #2 from column #1`() {
+        val request = delete(columnUrl + "1/tasks/2").contentType(jsonContentType)
+
+        mockMvc.perform(request).andExpect(status().isOk)
+    }
+
+    @Test
+    fun `T - Check that there is only one task left`() {
+        val expectedJsonString = """
+        [
+            {
+                "name": "First task (Upd)",
+                "creation": "$taskCreationDate",
+                "description": "Look at iPhone 4S - smart phone by Apple",
+                "id": 1
+            }
+        ]
+        """.trimIndent()
+        mockMvc.perform(get(tasksUrl))
+                .andExpect(status().isOk)
+                .andExpect(content().json(expectedJsonString, true))
+    }
 }
