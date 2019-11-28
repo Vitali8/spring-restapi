@@ -280,7 +280,7 @@ class RestApiTaskApplicationTests {
         """.trimIndent()
 
         val result = mockMvc.perform(request)
-        result.andExpect(status().isOk)
+        result.andExpect(status().isFound)
                 .andExpect(content().json(expectedJsonString, true))
     }
 
@@ -375,7 +375,7 @@ class RestApiTaskApplicationTests {
         """.trimIndent()
 
         mockMvc.perform(get(columnUrl + "4").contentType(jsonContentType))
-                .andExpect(status().isOk)
+                .andExpect(status().isFound)
                 .andExpect(content().json(expectedJsonString, true))
     }
 
