@@ -15,9 +15,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup
 import org.springframework.web.context.WebApplicationContext
-import java.time.LocalDateTime
 
-//TODO: Update (rewrite) tests according to the new refactored code, logic and structure
 @SpringBootTest
 @RunWith(SpringRunner::class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -28,8 +26,8 @@ class RestApiTaskApplicationTests {
     private val jsonContentType = MediaType(MediaType.APPLICATION_JSON.type, MediaType.APPLICATION_JSON.subtype)
     private lateinit var mockMvc: MockMvc
 
-    // Data for tests
-    private val taskCreationDate = LocalDateTime.now().withNano(0)
+    // Date for tests
+    private val taskCreationDate = "2019-11-28T18:05:45" /*LocalDateTime.now().withNano(0).toString()*/
 
     @Autowired
     private lateinit var webAppContext: WebApplicationContext
@@ -351,7 +349,7 @@ class RestApiTaskApplicationTests {
         // creation date and time is modifying for some reason...
         mockMvc.perform(request)
                 .andExpect(status().isOk)
-                .andExpect(content().json(expectedJsonString, false))
+                .andExpect(content().json(expectedJsonString, true))
     }
 
     @Test
