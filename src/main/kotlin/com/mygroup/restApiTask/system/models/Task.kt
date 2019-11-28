@@ -1,5 +1,6 @@
 package com.mygroup.restApiTask.system.models
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import java.time.LocalDateTime
 import java.util.*
 import javax.persistence.*
@@ -8,21 +9,21 @@ import javax.persistence.*
 @Table(name = "Tasks")
 @SequenceGenerator(name = "task_pos_seq", initialValue = 1, allocationSize = 1)
 data class Task(
-        @Column(name = "name", length = 200)
+        @javax.persistence.Column(name = "name", length = 200)
         var name: String = "",
 
-        @Column(name = "description", length = 1000)
+        @javax.persistence.Column(name = "description", length = 1000)
         var description: String = "",
 
-//        @JsonProperty("position")
-        @Column(name = "position", unique = true, nullable = false)
-        var position: Double = 1.0,
+        @JsonIgnore
+        @javax.persistence.Column(name = "position", unique = true, nullable = false)
+        var position: Double = 0.0,
 
-        @Column(name = "creation")
+        @javax.persistence.Column(name = "creation")
         var creation: LocalDateTime = LocalDateTime.now(),
 
         @Id
-        @Column(name = "id", updatable = false, nullable = false)
+        @javax.persistence.Column(name = "id", updatable = false, nullable = false)
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         val id: Long = 0L
 ) {
@@ -35,10 +36,10 @@ data class Task(
 //    }
 
 //    operator fun compareTo(o: Task) = position.compareTo(o.position)
-    override fun equals(o: Any?): Boolean {
-        if (this === o) return true
-        if (o == null || javaClass != o.javaClass) return false
-        val that = o as Task
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || javaClass != other.javaClass) return false
+        val that = other as Task
         return id == that.id && java.lang.Double.compare(that.position, position) == 0 &&
                 name == that.name &&
                 description == that.description &&

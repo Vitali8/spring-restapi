@@ -10,4 +10,7 @@ interface MyBaseRepository<T, ID> : PagingAndSortingRepository<T, ID> {
 
     //    @Query("SELECT * FROM tasks WHERE position > :position ORDER BY position LIMIT 1", nativeQuery = true)
     fun findFirstByPositionGreaterThanOrderByPositionAsc(@Param("position") position: Double): Optional<T>
+    fun findFirstByPositionLessThanOrderByPositionAsc(@Param("position") position: Double): Optional<T>
+
+    fun findTopByPositionNotNullOrderByPositionDesc() : Optional<T>
 }

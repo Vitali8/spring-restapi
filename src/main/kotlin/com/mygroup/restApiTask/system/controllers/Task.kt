@@ -1,6 +1,6 @@
 package com.mygroup.restApiTask.system.controllers
 
-import com.mygroup.restApiTask.service.TaskListService
+import com.mygroup.restApiTask.service.ColumnService
 import com.mygroup.restApiTask.service.TaskService
 import com.mygroup.restApiTask.system.models.Task
 import org.springframework.beans.factory.annotation.Autowired
@@ -11,45 +11,59 @@ import org.springframework.web.bind.annotation.*
 //@RequestMapping("tasks")
 class TasksController(private val taskService: TaskService) {
     @Autowired
-    private lateinit var taskListService: TaskListService
-
+    private lateinit var columnService: ColumnService
+    // general task
     @GetMapping("/tasks")
     fun index() = taskService.all()
-
-    @GetMapping("/taskLists/{taskListId}/tasks/")
-    fun getTasks(@PathVariable(value = "taskListId") taskListId: Long): MutableList<Task> = taskListService.get(taskListId).get().tasks
-
-    @PostMapping("/taskLists/{id}/tasks")
-    @ResponseStatus(HttpStatus.CREATED)
-    fun addTask(@PathVariable(value = "id") id: Long, @RequestBody task: Task): Task {
-        val column = taskListService.get(id).get()
-        column.tasks.add(task)
-        return taskService.add(task)
-    }
 
     @GetMapping("/tasks/{id}")
     @ResponseStatus(HttpStatus.FOUND)
     fun read(@PathVariable id: Long) = taskService.get(id)
 
-    @GetMapping("/taskLists/{taskListId}/tasks/{taskId}")
-    @ResponseStatus(HttpStatus.FOUND)
-    fun getTask(@PathVariable(value = "taskListId") taskListId: Long, @PathVariable(value = "taskId") taskId: Long) = taskService.get(taskId)
+    @PutMapping("/tasks/{targetTaskId}/moveBefore/{beforeTaskId}")
+    fun moveBefore(@PathVariable targetTaskId: Long, @PathVariable beforeTaskId: Long) = taskService.insertAbove(targetTaskId, beforeTaskId)
 
-    @PutMapping("/tasks/{id}")
-    fun update(@PathVariable id: Long, @RequestBody task: Task) = taskService.edit(id, task)
-
-    @PutMapping("/taskLists/{taskListId}/tasks/{taskId}")
-    fun updateTask(@PathVariable(value = "taskListId") taskListId: Long,
-                   @PathVariable(value = "taskId") taskId: Long,
-                   @RequestBody updatedTask: Task) = taskService.edit(taskId, updatedTask)
-
-    @PutMapping("/tasks/{targetTaskId}/move/{upperTaskId}")
-    fun move(@PathVariable targetTaskId: Long, @PathVariable upperTaskId: Long) = taskService.insertBelow(targetTaskId, upperTaskId)
+    @PutMapping("/tasks/{targetTaskId}/moveAfter/{afterTaskId}")
+    fun moveAfter(@PathVariable targetTaskId: Long, @PathVariable afterTaskId: Long) = taskService.insertBelow(targetTaskId, afterTaskId)
 
     @DeleteMapping("/tasks/{id}")
     fun delete(@PathVariable id: Long) = taskService.remove(id)
 
-    @DeleteMapping("/taskLists/{taskListId}/tasks/{taskId}")
-    fun deleteTask(@PathVariable(value = "taskListId") taskListId: Long,
+    // Tasks per column
+    @GetMapping("/columns/{columnId}/tasks/")
+    fun getTasks(@PathVariable(value = "columnId") columnId: Long): MutableList<Task> = columnService.get(columnId).get().tasks
+
+    @PostMapping("/columns/{id}/tasks")
+    @ResponseStatus(HttpStatus.CREATED)
+    fun addTask(@PathVariable(value = "id") id: Long, @RequestBody task: Task): Task {
+        val column = columnService.get(id).get()
+        column.tasks.add(task)
+        return taskService.add(task)
+    }
+
+    @GetMapping("/columns/{columnId}/tasks/{taskId}")
+    @ResponseStatus(HttpStatus.FOUND)
+    fun getTask(@PathVariable(value = "columnId") columnId: Long, @PathVariable(value = "taskId") taskId: Long) = taskService.get(taskId)
+
+    @PutMapping("/columns/{columnId}/tasks/{taskId}")
+    fun updateTask(@PathVariable(value = "columnId") columnId: Long,
+                   @PathVariable(value = "taskId") taskId: Long,
+                   @RequestBody updatedTask: Task): Task {
+        val currTask = taskService.get(taskId).get()
+        return taskService.edit(taskId, updatedTask.copy(position = currTask.position))
+    }
+
+    @PutMapping("/columns/{columnFrom}/tasks/{taskId}/moveToColumn/{columnTo}")
+    @ResponseStatus(HttpStatus.OK)
+    fun moveToColumn(@PathVariable(value = "columnFrom") columnFrom: Long,
+                     @PathVariable(value = "taskId") taskId: Long,
+                     @PathVariable(value = "columnTo") columnTo: Long) {
+        val task = taskService.get(taskId).get()
+        columnService.removeTask(columnFrom, task)
+        columnService.addTask(columnTo, task)
+    }
+
+    @DeleteMapping("/columns/{columnId}/tasks/{taskId}")
+    fun deleteTask(@PathVariable(value = "columnId") columnId: Long,
                    @PathVariable(value = "taskId") taskId: Long) = taskService.remove(taskId)
 }
