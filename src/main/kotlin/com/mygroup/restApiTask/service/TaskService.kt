@@ -28,9 +28,12 @@ class TaskService(private val taskRepository: TaskRepository) { // Внедря�
     fun remove(id: Long) = taskRepository.deleteById(id)
 
     fun insertBelow(targetId: Long, upperElementId: Long) {
-        val lowerElement = findNextAfter(upperElementId).get()
         val upperElement = get(upperElementId).get()
-        taskRepository.updatePositionById(targetId, position = (upperElement.position + lowerElement.position) / 2)
+        val lowerElement = findNextAfter(upperElementId)
+        val targetPosition =
+                if (lowerElement.isPresent) (upperElement.position + lowerElement.get().position) / 2
+                else upperElement.position + 1
+        taskRepository.updatePositionById(targetId, position = targetPosition)
     }
 
     fun findNextAfter(id: Long) = taskRepository.findFirstByPositionGreaterThanOrderByPositionAsc(get(id).get().position)

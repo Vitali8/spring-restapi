@@ -19,7 +19,7 @@ class ColumnController(private val columnService: ColumnService) {
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.FOUND)
-    fun readColumn(@PathVariable id: Long) = columnService.get(id).get()
+    fun readColumn(@PathVariable id: Long) = columnService.get(id)
 
     // edit column (in fact, only name)
     @PutMapping("/{id}")

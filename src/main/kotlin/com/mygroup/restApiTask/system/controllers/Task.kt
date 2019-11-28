@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*
 class TasksController(private val taskService: TaskService) {
     @Autowired
     private lateinit var columnService: ColumnService
+
     // general task
     @GetMapping("/tasks")
     fun index() = taskService.all()
@@ -25,9 +26,6 @@ class TasksController(private val taskService: TaskService) {
 
     @PutMapping("/tasks/{targetTaskId}/moveAfter/{afterTaskId}")
     fun moveAfter(@PathVariable targetTaskId: Long, @PathVariable afterTaskId: Long) = taskService.insertBelow(targetTaskId, afterTaskId)
-
-    @DeleteMapping("/tasks/{id}")
-    fun delete(@PathVariable id: Long) = taskService.remove(id)
 
     // Tasks per column
     @GetMapping("/columns/{columnId}/tasks/")
@@ -65,5 +63,8 @@ class TasksController(private val taskService: TaskService) {
 
     @DeleteMapping("/columns/{columnId}/tasks/{taskId}")
     fun deleteTask(@PathVariable(value = "columnId") columnId: Long,
-                   @PathVariable(value = "taskId") taskId: Long) = taskService.remove(taskId)
+                   @PathVariable(value = "taskId") taskId: Long) {
+        columnService.removeTask(columnId, taskService.get(taskId).get())
+        taskService.remove(taskId)
+    }
 }

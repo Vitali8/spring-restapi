@@ -34,9 +34,12 @@ class ColumnService(private val columnRepository: ColumnRepository) {
     fun remove(id: Long) = columnRepository.deleteById(id)
 
     fun insertBelow(targetId: Long, upperElementId: Long) {
-        val lowerElement = findNextAfter(upperElementId).get()
         val upperElement = get(upperElementId).get()
-        columnRepository.updatePositionById(targetId, position = (upperElement.position + lowerElement.position) / 2)
+        val lowerElement = findNextAfter(upperElementId)
+        val targetPosition =
+                if (lowerElement.isPresent) (upperElement.position + lowerElement.get().position) / 2
+                else upperElement.position + 1
+        columnRepository.updatePositionById(targetId, position = targetPosition)
     }
     fun findNextAfter(id: Long) = columnRepository.findFirstByPositionGreaterThanOrderByPositionAsc(get(id).get().position)
 
