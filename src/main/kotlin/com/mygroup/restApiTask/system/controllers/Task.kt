@@ -51,14 +51,14 @@ class TasksController(private val taskService: TaskService) {
         return taskService.edit(taskId, updatedTask.copy(position = currTask.position))
     }
 
-    @PutMapping("/columns/{columnFrom}/tasks/{taskId}/moveToColumn/{columnTo}")
+    @PutMapping("/columns/{fromColumnId}/tasks/{taskId}/moveToColumn/{toColumnId}")
     @ResponseStatus(HttpStatus.OK)
-    fun moveToColumn(@PathVariable(value = "columnFrom") columnFrom: Long,
+    fun moveToColumn(@PathVariable(value = "fromColumnId") fromColumnId: Long,
                      @PathVariable(value = "taskId") taskId: Long,
-                     @PathVariable(value = "columnTo") columnTo: Long) {
+                     @PathVariable(value = "toColumnId") toColumnId: Long) {
         val task = taskService.get(taskId).get()
-        columnService.removeTask(columnFrom, task)
-        columnService.addTask(columnTo, task)
+        columnService.removeTask(fromColumnId, task)
+        columnService.addTask(toColumnId, task)
     }
 
     @DeleteMapping("/columns/{columnId}/tasks/{taskId}")
